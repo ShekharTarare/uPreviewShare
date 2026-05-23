@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>uPreviewShare</RootNamespace>
+    <ContentTargetFolders>.</ContentTargetFolders>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>uPreviewShare</PackageId>
+    <Title>uPreviewShare for Umbraco</Title>
+    <Description>A Bellissima-native package for Umbraco 17 that enables content editors to securely share unpublished draft nodes with external stakeholders via time-limited, view-capped, and PIN-protected links.</Description>
+    <Tags>umbraco;umbraco-marketplace;umbraco-package;preview-share;preview;sharing</Tags>
+    <Authors>Shekhar Tarare</Authors>
+    <Company>Shekhar Tarare</Company>
+    <Copyright>Copyright © 2026 Shekhar Tarare</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ShekharTarare/uPreviewShare</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+    <RepositoryUrl>https://github.com/ShekharTarare/uPreviewShare</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Cms" Version="[17.0.0,18.0.0)" />
+    <PackageReference Include="Umbraco.Cms.Api.Management" Version="[17.0.0,18.0.0)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Include App_Plugins files in NuGet package for deployment -->
+    <Content Include="App_Plugins\**\*.*">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Link>App_Plugins\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <Pack>true</Pack>
+      <PackagePath>App_Plugins\%(RecursiveDir)%(Filename)%(Extension)</PackagePath>
+    </Content>
+
+    <!-- Include .targets file for auto-copying App_Plugins to consuming projects -->
+    <None Include="buildTransitive\uPreviewShare.targets" Pack="true" PackagePath="buildTransitive\" />
+
+    <!-- Include README in NuGet package -->
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+
+    <!-- Include icon in NuGet package -->
+    <None Include="icon.png" Pack="true" PackagePath="\" Condition="Exists('icon.png')" />
+  </ItemGroup>
+
+</Project>

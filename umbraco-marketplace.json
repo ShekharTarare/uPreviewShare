@@ -1,0 +1,24 @@
+{
+  "Title": "uPreviewShare - Secure Draft Preview Sharing",
+  "Description": "Securely share unpublished draft content with external stakeholders via time-limited, view-capped, and PIN-protected preview links. Renders through actual Umbraco templates.",
+  "Category": "Content Management",
+  "PackageType": "Package",
+  "AuthorDetails": {
+    "Name": "Shekhar Tarare",
+    "Url": "https://shekhartarare.dev",
+    "ImageUrl": ""
+  },
+  "Screenshots": [],
+  "VideoUrl": "",
+  "Tags": [
+    "secure",
+    "draft",
+    "preview",
+    "sharing",
+    "content",
+    "review",
+    "collaboration",
+    "pin-protection"
+  ],
+  "VersionSpecificPackageIds": []
+}

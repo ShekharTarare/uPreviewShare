@@ -1,0 +1,19 @@
+<Project>
+  <Target Name="CopyuPreviewShareAppPlugins" AfterTargets="Build">
+    <ItemGroup>
+      <uPreviewShareFiles Include="$(MSBuildThisFileDirectory)../App_Plugins/uPreviewShare/**/*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(uPreviewShareFiles)"
+          DestinationFolder="$(MSBuildProjectDirectory)/App_Plugins/uPreviewShare/%(RecursiveDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="CopyuPreviewShareAppPluginsPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <uPreviewSharePublishFiles Include="$(MSBuildThisFileDirectory)../App_Plugins/uPreviewShare/**/*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(uPreviewSharePublishFiles)"
+          DestinationFolder="$(PublishDir)/App_Plugins/uPreviewShare/%(RecursiveDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
+</Project>
