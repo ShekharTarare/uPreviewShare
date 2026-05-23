@@ -1,0 +1,24 @@
+{
+  "name": "uPreviewShare",
+  "version": "1.0.0",
+  "extensions": [
+    {
+      "type": "workspaceView",
+      "name": "uPreviewShare Workspace View",
+      "alias": "uPreviewShare.WorkspaceView",
+      "element": "/App_Plugins/uPreviewShare/upreviewshare-workspace-view.js",
+      "weight": 200,
+      "meta": {
+        "label": "uPreviewShare",
+        "pathname": "upreviewshare",
+        "icon": "icon-lock"
+      },
+      "conditions": [
+        {
+          "alias": "Umb.Condition.WorkspaceAlias",
+          "match": "Umb.Workspace.Document"
+        }
+      ]
+    }
+  ]
+}

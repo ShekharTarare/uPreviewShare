@@ -1,0 +1,39 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## NuGet
+*.nupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+
+## Visual Studio
+.vs/
+*.rsuser
+*.csproj.user
+
+## Rider
+.idea/
+
+## OS files
+.DS_Store
+Thumbs.db
+
+## Umbraco
+**/umbraco/Data/*.db
+**/umbraco/Data/*.db-shm
+**/umbraco/Data/*.db-wal
+**/App_Data/
+**/umbraco/Logs/
+
+## Test site specific
+tests/**/umbraco/
+tests/**/App_Plugins/
+
+## Build output
+artifacts/
+publish/
