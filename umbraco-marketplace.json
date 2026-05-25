@@ -8,7 +8,16 @@
     "Url": "https://shekhartarare.dev",
     "ImageUrl": ""
   },
-  "Screenshots": [],
+  "Screenshots": [
+    "https://raw.githubusercontent.com/ShekharTarare/uPreviewShare/main/screenshots/workspace-tab.png",
+    "https://raw.githubusercontent.com/ShekharTarare/uPreviewShare/main/screenshots/results.png",
+    "https://raw.githubusercontent.com/ShekharTarare/uPreviewShare/main/screenshots/create-link.png",
+    "https://raw.githubusercontent.com/ShekharTarare/uPreviewShare/main/screenshots/audit-log.png",
+    "https://raw.githubusercontent.com/ShekharTarare/uPreviewShare/main/screenshots/branding-page.png",
+    "https://raw.githubusercontent.com/ShekharTarare/uPreviewShare/main/screenshots/preview-page.png",
+    "https://raw.githubusercontent.com/ShekharTarare/uPreviewShare/main/screenshots/pin-page.png",
+    "https://raw.githubusercontent.com/ShekharTarare/uPreviewShare/main/screenshots/access-lock-page.png"
+  ],
   "VideoUrl": "",
   "Tags": [
     "secure",
