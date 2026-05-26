@@ -249,7 +249,7 @@ export class uPreviewShareWorkspaceView extends UmbElementMixin(LitElement) {
               uPreviewShare
               <span
                 style="font-size:0.6em;font-weight:400;opacity:0.7;vertical-align:middle;"
-                >v1.0.1</span
+                >v1.0.2</span
               >
             </div>
             <div class="header-subtitle">

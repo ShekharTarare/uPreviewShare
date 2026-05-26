@@ -1,22 +1,47 @@
 {
   "Title": "uPreviewShare - Secure Draft Preview Sharing",
   "Description": "Securely share unpublished draft content with external stakeholders via time-limited, view-capped, and PIN-protected preview links. Renders through actual Umbraco templates.",
-  "Category": "Content Management",
+  "Category": "Editor Tools",
   "PackageType": "Package",
+  "LicenseTypes": ["Free"],
   "AuthorDetails": {
     "Name": "Shekhar Tarare",
     "Url": "https://shekhartarare.dev",
     "ImageUrl": ""
   },
   "Screenshots": [
-    "https://raw.githubusercontent.com/ShekharTarare/uPreviewShare/main/screenshots/workspace-tab.png",
-    "https://raw.githubusercontent.com/ShekharTarare/uPreviewShare/main/screenshots/results.png",
-    "https://raw.githubusercontent.com/ShekharTarare/uPreviewShare/main/screenshots/create-link.png",
-    "https://raw.githubusercontent.com/ShekharTarare/uPreviewShare/main/screenshots/audit-log.png",
-    "https://raw.githubusercontent.com/ShekharTarare/uPreviewShare/main/screenshots/branding-page.png",
-    "https://raw.githubusercontent.com/ShekharTarare/uPreviewShare/main/screenshots/preview-page.png",
-    "https://raw.githubusercontent.com/ShekharTarare/uPreviewShare/main/screenshots/pin-page.png",
-    "https://raw.githubusercontent.com/ShekharTarare/uPreviewShare/main/screenshots/access-lock-page.png"
+    {
+      "ImageUrl": "https://raw.githubusercontent.com/ShekharTarare/uPreviewShare/main/screenshots/workspace-tab.png",
+      "Caption": "Workspace Tab"
+    },
+    {
+      "ImageUrl": "https://raw.githubusercontent.com/ShekharTarare/uPreviewShare/main/screenshots/results.png",
+      "Caption": "Link Results"
+    },
+    {
+      "ImageUrl": "https://raw.githubusercontent.com/ShekharTarare/uPreviewShare/main/screenshots/create-link.png",
+      "Caption": "Create Link Dialog"
+    },
+    {
+      "ImageUrl": "https://raw.githubusercontent.com/ShekharTarare/uPreviewShare/main/screenshots/audit-log.png",
+      "Caption": "Audit Log"
+    },
+    {
+      "ImageUrl": "https://raw.githubusercontent.com/ShekharTarare/uPreviewShare/main/screenshots/branding-page.png",
+      "Caption": "Branding Configuration"
+    },
+    {
+      "ImageUrl": "https://raw.githubusercontent.com/ShekharTarare/uPreviewShare/main/screenshots/preview-page.png",
+      "Caption": "Preview Page"
+    },
+    {
+      "ImageUrl": "https://raw.githubusercontent.com/ShekharTarare/uPreviewShare/main/screenshots/pin-page.png",
+      "Caption": "PIN Entry Page"
+    },
+    {
+      "ImageUrl": "https://raw.githubusercontent.com/ShekharTarare/uPreviewShare/main/screenshots/access-lock-page.png",
+      "Caption": "Access Lockout Page"
+    }
   ],
   "VideoUrl": "",
   "Tags": [
@@ -29,5 +54,7 @@
     "collaboration",
     "pin-protection"
   ],
+  "IssueTrackerUrl": "https://github.com/ShekharTarare/uPreviewShare/issues",
+  "DocumentationUrl": "https://github.com/ShekharTarare/uPreviewShare/blob/main/README.md",
   "VersionSpecificPackageIds": []
 }

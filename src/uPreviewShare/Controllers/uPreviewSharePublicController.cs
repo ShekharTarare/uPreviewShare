@@ -117,7 +117,7 @@ public class uPreviewSharePublicController : Controller
         };
 
         var html = uPreviewShareHtmlRenderer.RenderPreviewPage(viewModel);
-        Response.Headers["Content-Security-Policy"] = "default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'";
+        Response.Headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'";
         return Content(html, "text/html");
     }
 
@@ -141,7 +141,7 @@ public class uPreviewSharePublicController : Controller
                 ErrorMessage = $"Too many failed attempts. Please try again after {retryAfterSeconds / 60} minutes.",
                 BrandingConfig = brandingConfigLockout
             };
-            Response.Headers["Content-Security-Policy"] = "default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'";
+            Response.Headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'";
             return Content(uPreviewShareHtmlRenderer.RenderPinPage(lockoutViewModel), "text/html");
         }
 
@@ -152,7 +152,7 @@ public class uPreviewSharePublicController : Controller
             Token = token, RemainingAttempts = remainingAttempts, BrandingConfig = brandingConfig,
             ErrorMessage = error == "incorrect" ? "The PIN you entered is incorrect." : null
         };
-        Response.Headers["Content-Security-Policy"] = "default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'";
+        Response.Headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'";
         return Content(uPreviewShareHtmlRenderer.RenderPinPage(viewModel), "text/html");
     }
 
