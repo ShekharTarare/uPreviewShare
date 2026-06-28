@@ -4,7 +4,7 @@
 [![NuGet Downloads](https://img.shields.io/nuget/dt/uPreviewShare)](https://www.nuget.org/packages/uPreviewShare)
 [![Umbraco Marketplace](https://img.shields.io/badge/Umbraco-Marketplace-3544B1?logo=umbraco)](https://marketplace.umbraco.com/package/upreviewshare)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/ShekharTarare/uPreviewShare/blob/main/LICENSE)
-[![Umbraco 17+](https://img.shields.io/badge/Umbraco-17%2B-orange)](https://umbraco.com)
+[![Umbraco 17–18](https://img.shields.io/badge/Umbraco-17%20%7C%2018-orange)](https://umbraco.com)
 [![.NET 10](https://img.shields.io/badge/.NET-10.0-purple)](https://dotnet.microsoft.com)
 
 ![uPreviewShare Logo](https://raw.githubusercontent.com/ShekharTarare/uPreviewShare/main/src/uPreviewShare/icon.png)
@@ -42,8 +42,23 @@ Securely share unpublished draft content with external stakeholders — clients,
 
 ## Installation
 
+### Version Compatibility
+
+| uPreviewShare Version | Umbraco Version | Branch    |
+| --------------------- | --------------- | --------- |
+| 2.x                   | 18              | `main`    |
+| 1.x                   | 17              | `v17/dev` |
+
+### Umbraco 18
+
 ```bash
-dotnet add package uPreviewShare
+dotnet add package uPreviewShare --version 2.0.0
+```
+
+### Umbraco 17
+
+```bash
+dotnet add package uPreviewShare --version 1.0.2
 ```
 
 The package automatically:
@@ -116,7 +131,7 @@ uPreviewShare uses Umbraco's `IPublishedContentCache` with `preview: true` to fe
 
 ## Requirements
 
-- Umbraco 17.0+
+- Umbraco 18 (for v2.x) or Umbraco 17 (for v1.x)
 - .NET 10.0+
 - SQLite or SQL Server
 

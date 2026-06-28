@@ -332,7 +332,7 @@ Test site config (`tests/uPreviewShare.TestSite/appsettings.json`) should have:
 | ---- | ------------------------------------------------------------------- | --------------------------------------------------------------------- | ---- |
 | 20.1 | Run `dotnet pack src/uPreviewShare/uPreviewShare.csproj -c Release` | `.nupkg` created in `bin/Release`                                     | ☐    |
 | 20.2 | Inspect package contents (rename to .zip)                           | Contains: `App_Plugins/`, `buildTransitive/`, `icon.png`, `README.md` | ☐    |
-| 20.3 | Install package in a fresh Umbraco 17 site                          | Migrations run, tab appears, everything works                         | ☐    |
+| 20.3 | Install package in a fresh Umbraco 18 site                          | Migrations run, tab appears, everything works                         | ☐    |
 | 20.4 | Verify App_Plugins copied to consuming project on build             | `App_Plugins/uPreviewShare/` folder appears in consuming project      | ☐    |
 
 ---

@@ -1,0 +1,62 @@
+﻿@inherits UmbracoViewPage
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@Model.Name - Test Site</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 2rem; color: #1e293b; }
+        h1 { color: #0f172a; }
+        .property { margin-bottom: 1.5rem; }
+        .property-label { font-weight: 600; color: #64748b; font-size: 0.85rem; text-transform: uppercase; margin-bottom: 0.25rem; }
+        .property-value { font-size: 1rem; line-height: 1.6; }
+        .back-link { display: inline-block; margin-bottom: 1.5rem; color: #2563eb; text-decoration: none; }
+        .back-link:hover { text-decoration: underline; }
+        .draft-badge { display: inline-block; background: #fbbf24; color: #78350f; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-left: 0.5rem; }
+    </style>
+</head>
+<body>
+    <a class="back-link" href="/">← Back to Home</a>
+
+    <h1>@Model.Name</h1>
+
+    @if (Model.HasValue("title"))
+    {
+        <div class="property">
+            <div class="property-label">Title</div>
+            <div class="property-value">@Model.Value("title")</div>
+        </div>
+    }
+
+    @if (Model.HasValue("bodyText"))
+    {
+        <div class="property">
+            <div class="property-label">Body Text</div>
+            <div class="property-value">@Html.Raw(Model.Value("bodyText"))</div>
+        </div>
+    }
+
+    @if (Model.HasValue("summary"))
+    {
+        <div class="property">
+            <div class="property-label">Summary</div>
+            <div class="property-value">@Model.Value("summary")</div>
+        </div>
+    }
+
+    @if (Model.HasValue("author"))
+    {
+        <div class="property">
+            <div class="property-label">Author</div>
+            <div class="property-value">@Model.Value("author")</div>
+        </div>
+    }
+
+    <hr />
+    <p><em>uPreviewShare Test Site - Umbraco 18</em></p>
+</body>
+</html>

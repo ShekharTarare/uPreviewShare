@@ -12,9 +12,10 @@ You should receive a response within 48 hours. We will work with you to understa
 
 ## Supported Versions
 
-| Version | Supported |
-| ------- | --------- |
-| 1.x     | ✅        |
+| Version | Umbraco | Supported |
+| ------- | ------- | --------- |
+| 2.x     | 18      | ✅        |
+| 1.x     | 17      | ✅        |
 
 ## Scope
 

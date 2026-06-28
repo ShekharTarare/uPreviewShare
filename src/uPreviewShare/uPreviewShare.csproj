@@ -11,7 +11,7 @@
   <PropertyGroup>
     <PackageId>uPreviewShare</PackageId>
     <Title>uPreviewShare for Umbraco</Title>
-    <Description>A Bellissima-native package for Umbraco 17 that enables content editors to securely share unpublished draft nodes with external stakeholders via time-limited, view-capped, and PIN-protected links.</Description>
+    <Description>A Bellissima-native package for Umbraco that enables content editors to securely share unpublished draft nodes with external stakeholders via time-limited, view-capped, and PIN-protected links. Version 2.x supports Umbraco 18; version 1.x supports Umbraco 17.</Description>
     <PackageTags>umbraco;umbraco-marketplace;umbraco-package;preview-share;preview;sharing</PackageTags>
     <Authors>Shekhar Tarare</Authors>
     <Company>Shekhar Tarare</Company>
@@ -22,12 +22,12 @@
     <PackageIcon>icon.png</PackageIcon>
     <RepositoryUrl>https://github.com/ShekharTarare/uPreviewShare</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <Version>1.0.2</Version>
+    <Version>2.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Umbraco.Cms" Version="[17.0.0,18.0.0)" />
-    <PackageReference Include="Umbraco.Cms.Api.Management" Version="[17.0.0,18.0.0)" />
+    <PackageReference Include="Umbraco.Cms" Version="[18.0.0,19.0.0)" />
+    <PackageReference Include="Umbraco.Cms.Api.Management" Version="[18.0.0,19.0.0)" />
   </ItemGroup>
 
   <ItemGroup>

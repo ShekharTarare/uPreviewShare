@@ -1,0 +1,52 @@
+﻿@inherits UmbracoViewPage
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@Model.Name - Test Site</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 2rem; color: #1e293b; }
+        h1 { color: #0f172a; }
+        .property { margin-bottom: 1.5rem; }
+        .property-label { font-weight: 600; color: #64748b; font-size: 0.85rem; text-transform: uppercase; margin-bottom: 0.25rem; }
+        .property-value { font-size: 1rem; line-height: 1.6; }
+        nav { margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid #e2e8f0; }
+        nav a { margin-right: 1rem; color: #2563eb; text-decoration: none; }
+        nav a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/">Home</a>
+        @foreach (var child in Model.Children() ?? Enumerable.Empty<IPublishedContent>())
+        {
+            <a href="@child.Url()">@child.Name</a>
+        }
+    </nav>
+
+    <h1>@Model.Name</h1>
+
+    @if (Model.HasValue("bodyText"))
+    {
+        <div class="property">
+            <div class="property-label">Body</div>
+            <div class="property-value">@Model.Value("bodyText")</div>
+        </div>
+    }
+
+    @if (Model.HasValue("summary"))
+    {
+        <div class="property">
+            <div class="property-label">Summary</div>
+            <div class="property-value">@Model.Value("summary")</div>
+        </div>
+    }
+
+    <hr />
+    <p><em>uPreviewShare Test Site - Umbraco 18</em></p>
+</body>
+</html>

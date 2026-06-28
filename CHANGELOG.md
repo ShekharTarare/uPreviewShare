@@ -2,6 +2,26 @@
 
 All notable changes to uPreviewShare will be documented in this file.
 
+## [2.0.0] - 2026-06-29
+
+### Changed
+
+- Upgraded to Umbraco 18 (version range `[18.0.0,19.0.0)`)
+- Updated test site dependencies (Umbraco 18.0.0, RuntimeCompilation 10.0.7)
+- Bumped package version to 2.0.0
+
+### Notes
+
+- The `main` branch now targets Umbraco 18
+- For Umbraco 17, use the `v17/dev` branch (version 1.x)
+- No breaking API changes in the uPreviewShare package itself; `IContentService.GetById(Guid)` remains available in Umbraco 18 via `IContentServiceBase<TItem>`
+
+## [1.0.2] - 2026-06-15
+
+### Fixed
+
+- Minor bug fixes and stability improvements
+
 ## [1.0.0] - 2026-05-22
 
 ### Added

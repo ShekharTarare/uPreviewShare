@@ -18,7 +18,7 @@ Thank you for your interest in contributing to uPreviewShare!
 ### Requirements
 
 - .NET 10.0 SDK
-- Umbraco 17+
+- Umbraco 18 (`main` branch, v2.x) or Umbraco 17 (`v17/dev` branch, v1.x)
 - Visual Studio 2022 or VS Code
 
 ### Building and Running
