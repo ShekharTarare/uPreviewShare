@@ -53,6 +53,11 @@ public class TokenValidationResult
     public LinkStatus Status { get; set; }
 
     /// <summary>
+    /// The culture code for variant content (null for invariant).
+    /// </summary>
+    public string? Culture { get; set; }
+
+    /// <summary>
     /// Creates an invalid result (used for non-existent, expired, or revoked tokens).
     /// </summary>
     public static TokenValidationResult Invalid() => new() { IsValid = false };

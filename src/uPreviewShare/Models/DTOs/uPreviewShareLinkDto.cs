@@ -68,4 +68,9 @@ public class uPreviewShareLinkDto
     /// Who revoked the link (null if not revoked).
     /// </summary>
     public Guid? RevokedBy { get; set; }
+
+    /// <summary>
+    /// The culture/language code for variant content (null for invariant).
+    /// </summary>
+    public string? Culture { get; set; }
 }

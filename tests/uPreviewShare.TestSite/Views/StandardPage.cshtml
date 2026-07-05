@@ -1,0 +1,93 @@
+﻿@using Umbraco.Cms.Core.Models.PublishedContent
+@using Umbraco.Cms.Core.Strings
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@{
+    Layout = null; // Set this to your Master template alias later if you create one
+
+    // Safely retrieve the properties using their aliases
+    var headline = Model.Value<string>("headline");
+    var heroImage = Model.Value<IPublishedContent>("heroImage");
+    var mainContent = Model.Value<IHtmlEncodedString>("mainContent");
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@Model.Name - Quick Test</title>
+    <style>
+        /* Basic reset and styling for testing */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 30px;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .hero-image {
+            width: 100%;
+            height: auto;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .content {
+            margin-top: 20px;
+            font-size: 1.1rem;
+        }
+        .debug-panel {
+            margin-top: 40px;
+            padding: 15px;
+            background: #e8f4f8;
+            border-left: 4px solid #3498db;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        @if (heroImage != null)
+        {
+            <img src="@heroImage.Url()" class="hero-image" alt="@headline" />
+        }
+
+        <h1>@(string.IsNullOrWhiteSpace(headline) ? Model.Name : headline)</h1>
+
+        <div class="content">
+            @if (mainContent != null && !string.IsNullOrWhiteSpace(mainContent.ToString()))
+            {
+                @Html.Raw(mainContent)
+            }
+            else
+            {
+                <p><em>Your rich text content will appear here. Go to the Umbraco Content section to add some text!</em></p>
+            }
+        </div>
+
+        <div class="debug-panel">
+            <strong>System Info:</strong><br/>
+            Node ID: @Model.Id <br/>
+            Document Type: @Model.ContentType.Alias <br/>
+            Last Updated: @Model.UpdateDate.ToString("f")
+        </div>
+
+    </div>
+
+</body>
+</html>

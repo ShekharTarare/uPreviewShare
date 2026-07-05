@@ -48,7 +48,7 @@ public class ExpiredLinkCleanupService : BackgroundService
         {
             using var scope = _serviceProvider.CreateScope();
             var scopeProvider = scope.ServiceProvider.GetRequiredService<IScopeProvider>();
-            using var dbScope = scopeProvider.CreateScope();
+            using var dbScope = scopeProvider.CreateScope(autoComplete: true);
             var database = dbScope.Database;
             var now = DateTime.UtcNow;
             var expiredTokens = await database.FetchAsync<string>("SELECT Token FROM uPreviewShare_Links WHERE Status = @0 AND ExpiresAt IS NOT NULL AND ExpiresAt < @1", new object[] { (int)LinkStatus.Active, now });
@@ -61,7 +61,6 @@ public class ExpiredLinkCleanupService : BackgroundService
                 foreach (var token in expiredTokens)
                     _cache.Remove($"{CacheKeyPrefix}{token}");
             }
-            dbScope.Complete();
         }
         catch (Exception ex) { _logger.LogError(ex, "Failed to cleanup expired links from database."); }
 

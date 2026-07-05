@@ -18,6 +18,7 @@ public class uPreviewShareMigrationPlan : PackageMigrationPlan
         From(string.Empty)
             .To<CreateLinksTable>("create-upreviewshare-links-table")
             .To<CreateAuditLogTable>("create-upreviewshare-auditlog-table")
-            .To<CreateBrandingTable>("create-upreviewshare-branding-table");
+            .To<CreateBrandingTable>("create-upreviewshare-branding-table")
+            .To<AddCultureColumn>("add-upreviewshare-culture-column");
     }
 }

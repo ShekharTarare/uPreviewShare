@@ -2,6 +2,15 @@
 
 All notable changes to uPreviewShare will be documented in this file.
 
+## [2.1.0] - 2026-07-04
+
+### Added
+
+- Culture/variant support — share specific language versions of multilingual content
+- Language picker in Create Link dialog for variant document types
+- Variant badge shown on link cards in the workspace
+- New DB migration: `Culture` column added to `uPreviewShare_Links` table
+
 ## [2.0.0] - 2026-06-29
 
 ### Changed
@@ -14,7 +23,7 @@ All notable changes to uPreviewShare will be documented in this file.
 
 - The `main` branch now targets Umbraco 18
 - For Umbraco 17, use the `v17/dev` branch (version 1.x)
-- No breaking API changes in the uPreviewShare package itself; `IContentService.GetById(Guid)` remains available in Umbraco 18 via `IContentServiceBase<TItem>`
+- No breaking API changes; existing links continue to work as before
 
 ## [1.0.2] - 2026-06-15
 
