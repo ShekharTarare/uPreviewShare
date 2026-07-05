@@ -6,9 +6,11 @@ export class uPreviewShareCreateDialog extends UmbElementMixin(LitElement) {
   static properties = {
     nodeId: { type: String },
     authHelper: { type: Object },
+    cultures: { type: Array },
     _expiration: { state: true },
     _maxViews: { state: true },
     _pin: { state: true },
+    _culture: { state: true },
     _creating: { state: true },
     _success: { state: true },
     _createdUrl: { state: true },
@@ -175,9 +177,11 @@ export class uPreviewShareCreateDialog extends UmbElementMixin(LitElement) {
     super()
     this.nodeId = null
     this.authHelper = null
+    this.cultures = []
     this._expiration = '24h'
     this._maxViews = ''
     this._pin = ''
+    this._culture = ''
     this._creating = false
     this._success = false
     this._createdUrl = ''
@@ -252,6 +256,9 @@ export class uPreviewShareCreateDialog extends UmbElementMixin(LitElement) {
       }
       if (this._pin.trim()) {
         body.pin = this._pin.trim()
+      }
+      if (this._culture) {
+        body.culture = this._culture
       }
 
       const response = await this.authHelper.makeAuthenticatedRequest(
@@ -391,6 +398,24 @@ export class uPreviewShareCreateDialog extends UmbElementMixin(LitElement) {
           preview.</span
         >
       </div>
+
+      ${this.cultures && this.cultures.length > 1
+        ? html`
+            <div class="form-field">
+              <label>Preview Variant</label>
+              <select
+                .value=${this._culture}
+                @change=${(e) => (this._culture = e.target.value)}
+              >
+                <option value="">Default</option>
+                ${this.cultures.map(
+                  (c) => html`<option value="${c.culture}">${c.name}</option>`,
+                )}
+              </select>
+              <span class="hint">Choose which language variant to share</span>
+            </div>
+          `
+        : ''}
     `
   }
 

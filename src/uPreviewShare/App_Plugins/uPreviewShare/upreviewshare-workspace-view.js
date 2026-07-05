@@ -17,6 +17,7 @@ export class uPreviewShareWorkspaceView extends UmbElementMixin(LitElement) {
     _showCreateDialog: { state: true },
     _stats: { state: true },
     _auditFilterLinkId: { state: true },
+    _cultures: { state: true },
   }
 
   static styles = css`
@@ -154,6 +155,7 @@ export class uPreviewShareWorkspaceView extends UmbElementMixin(LitElement) {
     this._showCreateDialog = false
     this._stats = { total: 0, active: 0, expired: 0, views: 0 }
     this._auditFilterLinkId = null
+    this._cultures = []
     this.authHelper = new AuthenticationHelper(this)
   }
 
@@ -167,6 +169,21 @@ export class uPreviewShareWorkspaceView extends UmbElementMixin(LitElement) {
           this._loadData()
         }
       })
+      // Observe variant info for culture support
+      if (context.variants) {
+        this.observe(context.variants, (variants) => {
+          if (variants && variants.length > 1) {
+            this._cultures = variants
+              .filter((v) => v.culture)
+              .map((v) => ({
+                culture: v.culture,
+                name: v.name ? `${v.name} — ${v.culture}` : v.culture,
+              }))
+          } else {
+            this._cultures = []
+          }
+        })
+      }
     })
   }
 
@@ -249,7 +266,7 @@ export class uPreviewShareWorkspaceView extends UmbElementMixin(LitElement) {
               uPreviewShare
               <span
                 style="font-size:0.6em;font-weight:400;opacity:0.7;vertical-align:middle;"
-                >v1.0.2</span
+                >v1.1.0</span
               >
             </div>
             <div class="header-subtitle">
@@ -317,6 +334,7 @@ export class uPreviewShareWorkspaceView extends UmbElementMixin(LitElement) {
         ? html`<upreviewshare-create-dialog
             .nodeId=${this._nodeId}
             .authHelper=${this.authHelper}
+            .cultures=${this._cultures}
             @close=${this._closeCreateDialog}
             @created=${this._onLinkCreated}
           ></upreviewshare-create-dialog>`

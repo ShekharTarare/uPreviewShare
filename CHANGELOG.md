@@ -2,6 +2,25 @@
 
 All notable changes to uPreviewShare will be documented in this file.
 
+## [1.1.0] - 2026-07-05
+
+### Added
+
+- Culture/variant support — share specific language versions of multilingual content
+- Language picker in Create Link dialog for variant document types
+- Variant badge shown on link cards in the workspace
+- New DB migration: `Culture` column added to `uPreviewShare_Links` table
+
+### Fixed
+
+- Fixed ambient scope issue in ExpiredLinkCleanupService
+
+## [1.0.2] - 2026-06-15
+
+### Fixed
+
+- Minor bug fixes and stability improvements
+
 ## [1.0.0] - 2026-05-22
 
 ### Added

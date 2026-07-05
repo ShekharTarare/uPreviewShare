@@ -42,7 +42,7 @@ public class uPreviewShareManagementController : ManagementApiControllerBase
         if (content == null) return NotFound("Content not found");
         var nodeId = content.Id;
         var currentUserKey = GetCurrentUserKey();
-        var createRequest = new CreateLinkRequest { NodeId = nodeId, CreatedBy = currentUserKey, ExpiresAt = request.ExpiresAt, MaxViews = request.MaxViews, Pin = request.Pin };
+        var createRequest = new CreateLinkRequest { NodeId = nodeId, CreatedBy = currentUserKey, ExpiresAt = request.ExpiresAt, MaxViews = request.MaxViews, Pin = request.Pin, Culture = request.Culture };
         try
         {
             var link = await _tokenLinkService.CreateLinkAsync(createRequest, ct);
@@ -51,7 +51,7 @@ public class uPreviewShareManagementController : ManagementApiControllerBase
                 Id = link.Id, NodeId = link.NodeId, Token = link.Token, CreatedBy = link.CreatedBy, CreatedAt = link.CreatedAt,
                 ExpiresAt = link.ExpiresAt, MaxViews = link.MaxViews, ViewCount = link.ViewCount,
                 HasPin = !string.IsNullOrEmpty(link.PinHash), Status = (Models.Enums.LinkStatus)link.Status,
-                RevokedAt = link.RevokedAt, RevokedBy = link.RevokedBy
+                RevokedAt = link.RevokedAt, RevokedBy = link.RevokedBy, Culture = link.Culture
             };
             return StatusCode(StatusCodes.Status201Created, dto);
         }
