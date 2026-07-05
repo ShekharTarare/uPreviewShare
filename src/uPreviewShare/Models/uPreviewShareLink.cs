@@ -98,4 +98,13 @@ public class uPreviewShareLink
     [Column("RevokedBy")]
     [NullSetting(NullSetting = NullSettings.Null)]
     public Guid? RevokedBy { get; set; }
+
+    /// <summary>
+    /// The optional culture/language code for variant content (e.g., "en-US", "nl").
+    /// Null means invariant content or default culture.
+    /// </summary>
+    [Column("Culture")]
+    [Length(16)]
+    [NullSetting(NullSetting = NullSettings.Null)]
+    public string? Culture { get; set; }
 }

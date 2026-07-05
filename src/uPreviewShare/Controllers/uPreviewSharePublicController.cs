@@ -30,6 +30,7 @@ public class uPreviewSharePublicController : Controller
     private readonly Umbraco.Cms.Core.Services.IContentService _contentService;
     private readonly IHostEnvironment _hostEnvironment;
     private readonly IUmbracoContextAccessor _umbracoContextAccessor;
+    private readonly IVariationContextAccessor _variationContextAccessor;
 
     private const string SessionCookieName = "uPreviewShare.Session";
     private const string CookiePurpose = "uPreviewShare.SessionCookie.v1";
@@ -44,6 +45,7 @@ public class uPreviewSharePublicController : Controller
         Umbraco.Cms.Core.Services.IContentService contentService,
         IHostEnvironment hostEnvironment,
         IUmbracoContextAccessor umbracoContextAccessor,
+        IVariationContextAccessor variationContextAccessor,
         IOptions<uPreviewShareOptions> options,
         ILogger<uPreviewSharePublicController> logger)
     {
@@ -55,6 +57,7 @@ public class uPreviewSharePublicController : Controller
         _contentService = contentService;
         _hostEnvironment = hostEnvironment;
         _umbracoContextAccessor = umbracoContextAccessor;
+        _variationContextAccessor = variationContextAccessor;
         _sessionDuration = TimeSpan.FromMinutes(options.Value.SessionDurationMinutes);
         _logger = logger;
     }
@@ -88,6 +91,13 @@ public class uPreviewSharePublicController : Controller
         var content = _contentService.GetById(validationResult.NodeId!.Value);
         if (content != null && _umbracoContextAccessor.TryGetUmbracoContext(out var umbracoContext))
         {
+            // Set the variation context for culture-variant content
+            var culture = validationResult.Culture;
+            if (!string.IsNullOrEmpty(culture))
+            {
+                _variationContextAccessor.VariationContext = new VariationContext(culture);
+            }
+
             var draftContent = umbracoContext.Content?.GetById(true, content.Key);
             if (draftContent != null && draftContent.TemplateId > 0)
             {
@@ -96,6 +106,7 @@ public class uPreviewSharePublicController : Controller
                 {
                     HttpContext.Items["uPreviewShare.IsPreview"] = true;
                     HttpContext.Items["uPreviewShare.IsDraft"] = !content.Published || content.Edited;
+                    HttpContext.Items["uPreviewShare.Culture"] = culture;
                     return View(templateAlias, new ContentModel(draftContent));
                 }
             }
@@ -104,7 +115,7 @@ public class uPreviewSharePublicController : Controller
         // Fallback: render using the built-in property renderer if no template is available
         var brandingConfig = await _brandingService.GetBrandingAsync(ct);
         var nodeName = content?.Name ?? "Untitled";
-        var contentHtml = RenderNodeContent(content);
+        var contentHtml = RenderNodeContent(content, validationResult.Culture);
         var isDraft = content != null && (!content.Published || content.Edited);
 
         var viewModel = new PreviewViewModel
@@ -210,7 +221,7 @@ public class uPreviewSharePublicController : Controller
 
     #region Private Helpers
 
-    private static string RenderNodeContent(Umbraco.Cms.Core.Models.IContent? content)
+    private static string RenderNodeContent(Umbraco.Cms.Core.Models.IContent? content, string? culture = null)
     {
         if (content == null) return "<p><em>Content not found.</em></p>";
         var sb = new System.Text.StringBuilder();
@@ -219,7 +230,7 @@ public class uPreviewSharePublicController : Controller
         var hasProperties = false;
         foreach (var property in content.Properties)
         {
-            var value = property.GetValue();
+            var value = property.GetValue(culture);
             if (value == null || string.IsNullOrWhiteSpace(value.ToString())) continue;
             hasProperties = true;
             var label = System.Net.WebUtility.HtmlEncode(property.Alias);

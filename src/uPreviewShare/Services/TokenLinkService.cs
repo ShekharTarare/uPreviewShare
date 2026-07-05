@@ -46,7 +46,8 @@ public class TokenLinkService : ITokenLinkService
             MaxViews = request.MaxViews,
             ViewCount = 0,
             PinHash = request.Pin != null ? HashPin(request.Pin) : null,
-            Status = (int)LinkStatus.Active
+            Status = (int)LinkStatus.Active,
+            Culture = request.Culture
         };
 
         using var scope = _scopeProvider.CreateScope();
@@ -102,7 +103,8 @@ public class TokenLinkService : ITokenLinkService
             ViewCount = link.ViewCount,
             HasPin = !string.IsNullOrEmpty(link.PinHash),
             PinHash = link.PinHash,
-            Status = (LinkStatus)link.Status
+            Status = (LinkStatus)link.Status,
+            Culture = link.Culture
         };
 
         PopulateCache(cacheKey, result, link.ExpiresAt);
@@ -182,7 +184,8 @@ public class TokenLinkService : ITokenLinkService
             HasPin = !string.IsNullOrEmpty(link.PinHash),
             Status = (LinkStatus)link.Status,
             RevokedAt = link.RevokedAt,
-            RevokedBy = link.RevokedBy
+            RevokedBy = link.RevokedBy,
+            Culture = link.Culture
         }).ToList();
 
         return dtos;
@@ -208,7 +211,8 @@ public class TokenLinkService : ITokenLinkService
             HasPin = !string.IsNullOrEmpty(link.PinHash),
             Status = (LinkStatus)link.Status,
             RevokedAt = link.RevokedAt,
-            RevokedBy = link.RevokedBy
+            RevokedBy = link.RevokedBy,
+            Culture = link.Culture
         }).ToList();
 
         return dtos;
@@ -265,6 +269,8 @@ public class TokenLinkService : ITokenLinkService
             throw new ArgumentException("Max views must be between 1 and 10,000.", nameof(request));
         if (request.Pin != null && !PinRegex.IsMatch(request.Pin))
             throw new ArgumentException("PIN must be exactly 6 digits (0-9).", nameof(request));
+        if (request.Culture != null && request.Culture.Length > 16)
+            throw new ArgumentException("Culture code must not exceed 16 characters.", nameof(request));
     }
 
     private static bool IsLinkExpiredOrExhausted(TokenValidationResult result)

@@ -24,4 +24,10 @@ public class CreateLinkApiRequest
     /// Optional 6-digit numeric PIN for PIN-protected links. Must be exactly 6 digits (0-9).
     /// </summary>
     public string? Pin { get; set; }
+
+    /// <summary>
+    /// Optional culture code for variant content (e.g., "en-US", "nl").
+    /// Required for culture-variant document types, optional for invariant content.
+    /// </summary>
+    public string? Culture { get; set; }
 }

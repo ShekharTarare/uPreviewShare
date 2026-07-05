@@ -530,6 +530,10 @@ export class uPreviewShareLinkList extends UmbElementMixin(LitElement) {
     )
   }
 
+  _hasAnyCulture() {
+    return this.links && this.links.some((l) => l.culture)
+  }
+
   _formatDate(dateStr) {
     if (!dateStr) return 'Never'
     let utcDate = dateStr
@@ -758,6 +762,25 @@ export class uPreviewShareLinkList extends UmbElementMixin(LitElement) {
                 : ''}</span
             >
           </div>
+          ${link.culture
+            ? html`
+                <div class="card-field">
+                  <span class="card-field-label">Variant</span>
+                  <span class="card-field-value">${link.culture}</span>
+                </div>
+              `
+            : this._hasAnyCulture()
+              ? html`
+                  <div class="card-field">
+                    <span class="card-field-label">Variant</span>
+                    <span
+                      class="card-field-value"
+                      style="color: var(--uui-color-text-alt)"
+                      >Default</span
+                    >
+                  </div>
+                `
+              : ''}
         </div>
         <div class="card-footer">
           <button

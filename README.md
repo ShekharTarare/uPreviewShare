@@ -28,6 +28,7 @@ Securely share unpublished draft content with external stakeholders — clients,
 | Draft/Published Badge         | Floating bar shows reviewers the content status                                |
 | Workspace Tab                 | Full management UI in the content editor                                       |
 | Proxy-Aware                   | Reads `X-Forwarded-For` for accurate IP tracking behind load balancers         |
+| Culture Variant Support       | Share specific language versions of multilingual content                       |
 
 ## Screenshots
 
@@ -46,19 +47,19 @@ Securely share unpublished draft content with external stakeholders — clients,
 
 | uPreviewShare Version | Umbraco Version | Branch    |
 | --------------------- | --------------- | --------- |
-| 2.x                   | 18              | `main`    |
-| 1.x                   | 17              | `v17/dev` |
+| 2.1.x                 | 18              | `main`    |
+| 1.1.x                 | 17              | `v17/dev` |
 
 ### Umbraco 18
 
 ```bash
-dotnet add package uPreviewShare --version 2.0.0
+dotnet add package uPreviewShare --version 2.1.0
 ```
 
 ### Umbraco 17
 
 ```bash
-dotnet add package uPreviewShare --version 1.0.2
+dotnet add package uPreviewShare --version 1.1.0
 ```
 
 The package automatically:
