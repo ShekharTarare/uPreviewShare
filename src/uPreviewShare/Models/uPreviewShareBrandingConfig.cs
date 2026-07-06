@@ -19,6 +19,15 @@ public class uPreviewShareBrandingConfig
     public Guid Id { get; set; }
 
     /// <summary>
+    /// The content node ID this branding applies to.
+    /// Null means this is the global branding configuration.
+    /// A non-null value indicates a per-page branding override.
+    /// </summary>
+    [Column("NodeId")]
+    [NullSetting(NullSetting = NullSettings.Null)]
+    public int? NodeId { get; set; }
+
+    /// <summary>
     /// The relative path to the uploaded logo image.
     /// Null means default branding is used.
     /// </summary>
