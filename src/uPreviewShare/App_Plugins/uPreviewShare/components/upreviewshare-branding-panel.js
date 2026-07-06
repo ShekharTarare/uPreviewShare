@@ -5,6 +5,7 @@ import { NotificationHelper } from '../notification-helper.js'
 export class uPreviewShareBrandingPanel extends UmbElementMixin(LitElement) {
   static properties = {
     authHelper: { type: Object },
+    nodeId: { type: String },
     _primaryColor: { state: true },
     _backgroundColor: { state: true },
     _textColor: { state: true },
@@ -16,11 +17,41 @@ export class uPreviewShareBrandingPanel extends UmbElementMixin(LitElement) {
     _logoPath: { state: true },
     _uploading: { state: true },
     _showResetConfirm: { state: true },
+    _overrideEnabled: { state: true },
+    _hasOverride: { state: true },
+    _showOverrideDeleteConfirm: { state: true },
   }
 
   static styles = css`
     :host {
       display: block;
+    }
+
+    .override-section {
+      margin-bottom: 20px;
+      padding: 16px;
+      background: var(--uui-color-surface-alt);
+      border: 1px solid var(--uui-color-border);
+      border-radius: var(--uui-border-radius);
+    }
+
+    .override-toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .inheritance-indicator {
+      margin-top: 10px;
+      padding: 10px 14px;
+      background: var(--uui-color-surface);
+      border: 1px dashed var(--uui-color-border);
+      border-radius: var(--uui-border-radius);
+      font-size: 0.8rem;
+      color: var(--uui-color-text-alt);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .branding-layout {
@@ -161,6 +192,7 @@ export class uPreviewShareBrandingPanel extends UmbElementMixin(LitElement) {
   constructor() {
     super()
     this.authHelper = null
+    this.nodeId = null
     this._primaryColor = '#8B5CF6'
     this._backgroundColor = '#f8fafc'
     this._textColor = '#ffffff'
@@ -172,6 +204,9 @@ export class uPreviewShareBrandingPanel extends UmbElementMixin(LitElement) {
     this._logoPath = null
     this._uploading = false
     this._showResetConfirm = false
+    this._overrideEnabled = false
+    this._hasOverride = false
+    this._showOverrideDeleteConfirm = false
   }
 
   // W3C relative luminance formula for auto-contrast
@@ -196,14 +231,16 @@ export class uPreviewShareBrandingPanel extends UmbElementMixin(LitElement) {
     this._loadBranding()
   }
 
-  async _loadBranding() {
+  async _loadBranding(isInitialLoad = true) {
     if (!this.authHelper) return
-    this._loading = true
+    if (isInitialLoad) this._loading = true
     try {
       await this.authHelper.initialize()
-      const response = await this.authHelper.makeAuthenticatedRequest(
-        '/umbraco/management/api/v1/upreviewshare/branding',
-      )
+      // If we have a nodeId, check if a per-page override exists
+      const url = this.nodeId
+        ? `/umbraco/management/api/v1/upreviewshare/branding?nodeKey=${this.nodeId}`
+        : '/umbraco/management/api/v1/upreviewshare/branding'
+      const response = await this.authHelper.makeAuthenticatedRequest(url)
       if (response.ok) {
         const data = await response.json()
         this._primaryColor = data.primaryColor || '#8B5CF6'
@@ -211,6 +248,19 @@ export class uPreviewShareBrandingPanel extends UmbElementMixin(LitElement) {
         this._textColor = data.textColor || '#ffffff'
         this._isCustom = data.isCustom || false
         this._logoPath = data.logoPath || null
+        // Only set override toggle state on initial load (not when user explicitly toggles)
+        if (isInitialLoad) {
+          if (this.nodeId && data.isOverride) {
+            this._overrideEnabled = true
+            this._hasOverride = true
+          } else {
+            this._overrideEnabled = false
+            this._hasOverride = false
+          }
+        } else {
+          // When reloading after user action, only update _hasOverride
+          this._hasOverride = !!(this.nodeId && data.isOverride)
+        }
         // If textColor was explicitly saved, don't auto-calculate
         if (data.textColor) {
           this._useAutoText = false
@@ -218,13 +268,57 @@ export class uPreviewShareBrandingPanel extends UmbElementMixin(LitElement) {
           this._useAutoText = true
           this._updateAutoText()
         }
+      } else if (response.status === 404) {
+        // Content not yet saved or not found — use defaults silently
       } else {
         NotificationHelper.showError(this, 'Failed to load branding settings')
       }
     } catch (e) {
       NotificationHelper.showError(this, 'Network error loading branding')
     }
-    this._loading = false
+    if (isInitialLoad) this._loading = false
+  }
+
+  async _onToggleOverride(e) {
+    const enabled = e.target.checked
+    if (!enabled && this._hasOverride) {
+      // Show confirmation before deleting override
+      this._showOverrideDeleteConfirm = true
+      // Revert the toggle visually until confirmed
+      e.target.checked = true
+      return
+    }
+    this._overrideEnabled = enabled
+    if (!enabled) {
+      // Toggling off without a saved override — reload global branding to reset any unsaved changes
+      await this._loadBranding(false)
+    }
+  }
+
+  _closeOverrideDeleteConfirm() {
+    this._showOverrideDeleteConfirm = false
+  }
+
+  async _confirmDeleteOverride() {
+    this._showOverrideDeleteConfirm = false
+    if (!this.authHelper || !this.nodeId) return
+    try {
+      const response = await this.authHelper.makeAuthenticatedRequest(
+        `/umbraco/management/api/v1/upreviewshare/branding?nodeKey=${this.nodeId}`,
+        { method: 'DELETE' },
+      )
+      if (response.ok) {
+        this._overrideEnabled = false
+        this._hasOverride = false
+        // Reload global branding to display
+        await this._loadBranding(false)
+        NotificationHelper.showSuccess(this, 'Page branding override removed')
+      } else {
+        NotificationHelper.showError(this, 'Failed to remove page override')
+      }
+    } catch (e) {
+      NotificationHelper.showError(this, 'Network error removing override')
+    }
   }
 
   _onPrimaryColorPicker(e) {
@@ -257,19 +351,24 @@ export class uPreviewShareBrandingPanel extends UmbElementMixin(LitElement) {
     if (!this.authHelper) return
     this._saving = true
     try {
-      const response = await this.authHelper.makeAuthenticatedRequest(
-        '/umbraco/management/api/v1/upreviewshare/branding',
-        {
-          method: 'PUT',
-          body: JSON.stringify({
-            primaryColor: this._primaryColor,
-            backgroundColor: this._backgroundColor,
-            textColor: this._textColor,
-          }),
-        },
-      )
+      const baseUrl = '/umbraco/management/api/v1/upreviewshare/branding'
+      const url =
+        this._overrideEnabled && this.nodeId
+          ? `${baseUrl}?nodeKey=${this.nodeId}`
+          : baseUrl
+      const response = await this.authHelper.makeAuthenticatedRequest(url, {
+        method: 'PUT',
+        body: JSON.stringify({
+          primaryColor: this._primaryColor,
+          backgroundColor: this._backgroundColor,
+          textColor: this._textColor,
+        }),
+      })
       if (response.ok) {
         this._isCustom = true
+        if (this._overrideEnabled && this.nodeId) {
+          this._hasOverride = true
+        }
         NotificationHelper.showSuccess(this, 'Branding saved successfully')
       } else {
         NotificationHelper.showError(this, 'Failed to save branding')
@@ -291,10 +390,14 @@ export class uPreviewShareBrandingPanel extends UmbElementMixin(LitElement) {
   async _confirmReset() {
     this._showResetConfirm = false
     try {
-      const response = await this.authHelper.makeAuthenticatedRequest(
-        '/umbraco/management/api/v1/upreviewshare/branding',
-        { method: 'DELETE' },
-      )
+      const baseUrl = '/umbraco/management/api/v1/upreviewshare/branding'
+      const url =
+        this._overrideEnabled && this.nodeId
+          ? `${baseUrl}?nodeKey=${this.nodeId}`
+          : baseUrl
+      const response = await this.authHelper.makeAuthenticatedRequest(url, {
+        method: 'DELETE',
+      })
       if (response.ok) {
         this._primaryColor = '#8B5CF6'
         this._backgroundColor = '#f8fafc'
@@ -302,6 +405,12 @@ export class uPreviewShareBrandingPanel extends UmbElementMixin(LitElement) {
         this._useAutoText = true
         this._isCustom = false
         this._logoPath = null
+        if (this._overrideEnabled && this.nodeId) {
+          this._hasOverride = false
+          this._overrideEnabled = false
+          // Reload to show global defaults
+          await this._loadBranding(false)
+        }
         NotificationHelper.showSuccess(this, 'Branding reset to defaults')
       } else {
         NotificationHelper.showError(this, 'Failed to reset branding')
@@ -331,18 +440,23 @@ export class uPreviewShareBrandingPanel extends UmbElementMixin(LitElement) {
       const formData = new FormData()
       formData.append('file', file)
       const token = await this.authHelper.getToken()
-      const response = await fetch(
-        '/umbraco/management/api/v1/upreviewshare/branding/logo',
-        {
-          method: 'POST',
-          headers: { Authorization: 'Bearer ' + token },
-          body: formData,
-        },
-      )
+      const baseUrl = '/umbraco/management/api/v1/upreviewshare/branding/logo'
+      const url =
+        this._overrideEnabled && this.nodeId
+          ? `${baseUrl}?nodeKey=${this.nodeId}`
+          : baseUrl
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + token },
+        body: formData,
+      })
       if (response.ok) {
         const data = await response.json()
         this._logoPath = data.logoPath
         this._isCustom = true
+        if (this._overrideEnabled && this.nodeId) {
+          this._hasOverride = true
+        }
         NotificationHelper.showSuccess(this, 'Logo uploaded successfully')
       } else {
         const text = await response.text()
@@ -360,6 +474,35 @@ export class uPreviewShareBrandingPanel extends UmbElementMixin(LitElement) {
       return html`<div class="loading-state"><uui-loader></uui-loader></div>`
     }
 
+    return html`
+      ${this._renderOverrideSection()} ${this._renderBrandingEditor()}
+      ${this._renderResetConfirmDialog()}
+      ${this._renderOverrideDeleteConfirmDialog()}
+    `
+  }
+
+  _renderOverrideSection() {
+    if (!this.nodeId) return ''
+    return html`
+      <div class="override-section">
+        <div class="override-toggle-row">
+          <uui-toggle
+            label="Override branding for this page"
+            ?checked=${this._overrideEnabled}
+            @change=${this._onToggleOverride}
+          ></uui-toggle>
+        </div>
+        ${!this._overrideEnabled
+          ? html`<div class="inheritance-indicator">
+              <uui-icon name="icon-link"></uui-icon>
+              <span>Using global branding defaults</span>
+            </div>`
+          : ''}
+      </div>
+    `
+  }
+
+  _renderBrandingEditor() {
     return html`
       <div class="branding-layout">
         <div class="color-section">
@@ -567,53 +710,99 @@ export class uPreviewShareBrandingPanel extends UmbElementMixin(LitElement) {
           </div>
         </div>
       </div>
+    `
+  }
 
-      ${this._showResetConfirm
-        ? html`
-            <div
-              style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;"
+  _renderResetConfirmDialog() {
+    if (!this._showResetConfirm) return ''
+    return html`
+      <div
+        style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;"
+        @click=${this._closeResetConfirm}
+      >
+        <div
+          style="background:var(--uui-color-surface);padding:28px;border-radius:var(--uui-border-radius);max-width:420px;width:90%;box-shadow:0 8px 24px rgba(0,0,0,0.2);"
+          @click=${(e) => e.stopPropagation()}
+        >
+          <h3 style="margin:0 0 12px 0;font-size:1.1rem;">Reset Branding</h3>
+          <p
+            style="margin:0 0 8px 0;font-size:0.9rem;color:var(--uui-color-text-alt);"
+          >
+            This will reset all branding settings (colors and logo) to defaults.
+            The preview pages will use default uPreviewShare branding.
+          </p>
+          <p style="color:#991b1b;font-weight:500;font-size:0.85rem;">
+            This action cannot be undone.
+          </p>
+          <div
+            style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px;"
+          >
+            <uui-button
+              look="secondary"
+              label="Cancel"
               @click=${this._closeResetConfirm}
+              >Cancel</uui-button
             >
-              <div
-                style="background:var(--uui-color-surface);padding:28px;border-radius:var(--uui-border-radius);max-width:420px;width:90%;box-shadow:0 8px 24px rgba(0,0,0,0.2);"
-                @click=${(e) => e.stopPropagation()}
-              >
-                <h3 style="margin:0 0 12px 0;font-size:1.1rem;">
-                  Reset Branding
-                </h3>
-                <p
-                  style="margin:0 0 8px 0;font-size:0.9rem;color:var(--uui-color-text-alt);"
-                >
-                  This will reset all branding settings (colors and logo) to
-                  defaults. The preview pages will use default uPreviewShare
-                  branding.
-                </p>
-                <p style="color:#991b1b;font-weight:500;font-size:0.85rem;">
-                  This action cannot be undone.
-                </p>
-                <div
-                  style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px;"
-                >
-                  <uui-button
-                    look="secondary"
-                    label="Cancel"
-                    @click=${this._closeResetConfirm}
-                    >Cancel</uui-button
-                  >
-                  <uui-button
-                    look="primary"
-                    color="danger"
-                    label="Reset"
-                    @click=${this._confirmReset}
-                    >Reset</uui-button
-                  >
-                </div>
-              </div>
-            </div>
-          `
-        : ''}
+            <uui-button
+              look="primary"
+              color="danger"
+              label="Reset"
+              @click=${this._confirmReset}
+              >Reset</uui-button
+            >
+          </div>
+        </div>
+      </div>
+    `
+  }
+
+  _renderOverrideDeleteConfirmDialog() {
+    if (!this._showOverrideDeleteConfirm) return ''
+    return html`
+      <div
+        style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;"
+        @click=${this._closeOverrideDeleteConfirm}
+      >
+        <div
+          style="background:var(--uui-color-surface);padding:28px;border-radius:var(--uui-border-radius);max-width:420px;width:90%;box-shadow:0 8px 24px rgba(0,0,0,0.2);"
+          @click=${(e) => e.stopPropagation()}
+        >
+          <h3 style="margin:0 0 12px 0;font-size:1.1rem;">
+            Remove Page Branding Override
+          </h3>
+          <p
+            style="margin:0 0 8px 0;font-size:0.9rem;color:var(--uui-color-text-alt);"
+          >
+            Remove page branding override? This page will revert to using global
+            branding defaults.
+          </p>
+          <p style="color:#991b1b;font-weight:500;font-size:0.85rem;">
+            This action cannot be undone.
+          </p>
+          <div
+            style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px;"
+          >
+            <uui-button
+              look="secondary"
+              label="Cancel"
+              @click=${this._closeOverrideDeleteConfirm}
+              >Cancel</uui-button
+            >
+            <uui-button
+              look="primary"
+              color="danger"
+              label="Remove Override"
+              @click=${this._confirmDeleteOverride}
+              >Remove Override</uui-button
+            >
+          </div>
+        </div>
+      </div>
     `
   }
 }
 
-customElements.define('upreviewshare-branding-panel', uPreviewShareBrandingPanel)
+customElements.define(
+  'upreviewshare-branding-panel',
+  uPreviewShareBrandingPanel,
+)

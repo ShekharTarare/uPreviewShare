@@ -113,7 +113,7 @@ public class uPreviewSharePublicController : Controller
         }
 
         // Fallback: render using the built-in property renderer if no template is available
-        var brandingConfig = await _brandingService.GetBrandingAsync(ct);
+        var brandingConfig = await _brandingService.GetBrandingAsync(validationResult.NodeId, ct);
         var nodeName = content?.Name ?? "Untitled";
         var contentHtml = RenderNodeContent(content, validationResult.Culture);
         var isDraft = content != null && (!content.Published || content.Edited);
@@ -145,7 +145,7 @@ public class uPreviewSharePublicController : Controller
             var lockoutRemaining = _rateLimitService.GetLockoutRemaining(ipAddress, validationResult.LinkId.Value);
             var retryAfterSeconds = lockoutRemaining.HasValue ? (int)Math.Ceiling(lockoutRemaining.Value.TotalSeconds) : 900;
             Response.Headers["Retry-After"] = retryAfterSeconds.ToString();
-            var brandingConfigLockout = await _brandingService.GetBrandingAsync(ct);
+            var brandingConfigLockout = await _brandingService.GetBrandingAsync(validationResult.NodeId, ct);
             var lockoutViewModel = new PinViewModel
             {
                 Token = token, IsLockedOut = true, RetryAfterSeconds = retryAfterSeconds, RemainingAttempts = 0,
@@ -156,7 +156,7 @@ public class uPreviewSharePublicController : Controller
             return Content(uPreviewShareHtmlRenderer.RenderPinPage(lockoutViewModel), "text/html");
         }
 
-        var brandingConfig = await _brandingService.GetBrandingAsync(ct);
+        var brandingConfig = await _brandingService.GetBrandingAsync(validationResult.NodeId, ct);
         var remainingAttempts = _rateLimitService.GetRemainingAttempts(ipAddress, validationResult.LinkId.Value);
         var viewModel = new PinViewModel
         {

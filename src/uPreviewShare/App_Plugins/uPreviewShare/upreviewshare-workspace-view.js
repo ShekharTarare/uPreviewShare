@@ -205,6 +205,9 @@ export class uPreviewShareWorkspaceView extends UmbElementMixin(LitElement) {
       if (response.ok) {
         this._links = await response.json()
         this._computeStats()
+      } else if (response.status === 404) {
+        this._links = []
+        this._computeStats()
       } else {
         this._links = []
         this._computeStats()
@@ -266,7 +269,7 @@ export class uPreviewShareWorkspaceView extends UmbElementMixin(LitElement) {
               uPreviewShare
               <span
                 style="font-size:0.6em;font-weight:400;opacity:0.7;vertical-align:middle;"
-                >v1.1.0</span
+                >v1.2.0</span
               >
             </div>
             <div class="header-subtitle">
@@ -362,6 +365,7 @@ export class uPreviewShareWorkspaceView extends UmbElementMixin(LitElement) {
       case 'branding':
         return html`<upreviewshare-branding-panel
           .authHelper=${this.authHelper}
+          .nodeId=${this._nodeId}
         ></upreviewshare-branding-panel>`
       default:
         return ''
