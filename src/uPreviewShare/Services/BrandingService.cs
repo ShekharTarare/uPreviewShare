@@ -11,6 +11,7 @@ namespace uPreviewShare.Services;
 public partial class BrandingService : IBrandingService
 {
     private const string CacheKey = "ups:branding";
+    private const string PerPageCacheKeyPrefix = "ups:branding:node:";
     private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(30);
     private const int MaxLogoSizeBytes = 512_000;
     private const int MaxLogoWidth = 1000;
@@ -23,6 +24,9 @@ public partial class BrandingService : IBrandingService
     private readonly IHostEnvironment _hostEnvironment;
     private readonly ILogger<BrandingService> _logger;
 
+    // Track cached node IDs so we can invalidate them when global changes
+    private readonly HashSet<int> _cachedNodeIds = new();
+
     public BrandingService(IScopeProvider scopeProvider, IMemoryCache cache, IHostEnvironment hostEnvironment, ILogger<BrandingService> logger)
     {
         _scopeProvider = scopeProvider;
@@ -31,23 +35,77 @@ public partial class BrandingService : IBrandingService
         _logger = logger;
     }
 
-    public async Task<BrandingConfigDto> GetBrandingAsync(CancellationToken ct = default)
+
+    public Task<BrandingConfigDto> GetBrandingAsync(CancellationToken ct = default)
+        => GetBrandingAsync(null, ct);
+
+    public Task SaveBrandingAsync(string? primaryColor, string? backgroundColor, string? textColor, CancellationToken ct = default)
+        => SaveBrandingAsync(primaryColor, backgroundColor, textColor, null, ct);
+
+    public Task<string> SaveLogoAsync(Stream fileStream, string fileName, long fileSize, CancellationToken ct = default)
+        => SaveLogoAsync(fileStream, fileName, fileSize, null, ct);
+
+    public Task ResetBrandingAsync(CancellationToken ct = default)
+        => ResetBrandingAsync(null, ct);
+
+
+    public async Task<BrandingConfigDto> GetBrandingAsync(int? nodeId, CancellationToken ct = default)
     {
-        if (_cache.TryGetValue(CacheKey, out BrandingConfigDto? cached) && cached is not null)
+        var cacheKeyForRequest = GetCacheKey(nodeId);
+
+        if (_cache.TryGetValue(cacheKeyForRequest, out BrandingConfigDto? cached) && cached is not null)
             return cached;
 
         using var scope = _scopeProvider.CreateScope();
         var database = scope.Database;
-        var results = await database.FetchAsync<uPreviewShareBrandingConfig>("SELECT * FROM uPreviewShare_Branding");
-        var brandingConfig = results.FirstOrDefault();
+
+        BrandingConfigDto dto;
+
+        if (nodeId is not null)
+        {
+            // Try page override first
+            var pageResults = await database.FetchAsync<uPreviewShareBrandingConfig>(
+                "SELECT * FROM uPreviewShare_Branding WHERE NodeId = @0", new object[] { nodeId.Value });
+            var pageOverride = pageResults.FirstOrDefault();
+
+            if (pageOverride is not null)
+            {
+                dto = MapToDto(pageOverride);
+                dto.NodeId = nodeId;
+                dto.IsOverride = true;
+            }
+            else
+            {
+                // Fall back to global
+                var globalResults = await database.FetchAsync<uPreviewShareBrandingConfig>(
+                    "SELECT * FROM uPreviewShare_Branding WHERE NodeId IS NULL");
+                var globalConfig = globalResults.FirstOrDefault();
+
+                dto = MapToDto(globalConfig);
+                dto.NodeId = nodeId;
+                dto.IsOverride = false;
+            }
+        }
+        else
+        {
+            // Global branding
+            var globalResults = await database.FetchAsync<uPreviewShareBrandingConfig>(
+                "SELECT * FROM uPreviewShare_Branding WHERE NodeId IS NULL");
+            var globalConfig = globalResults.FirstOrDefault();
+
+            dto = MapToDto(globalConfig);
+        }
+
         scope.Complete();
 
-        var dto = MapToDto(brandingConfig);
-        _cache.Set(CacheKey, dto, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = CacheTtl });
+        _cache.Set(cacheKeyForRequest, dto, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = CacheTtl });
+        if (nodeId is not null) TrackCachedNodeId(nodeId.Value);
         return dto;
     }
 
-    public async Task SaveBrandingAsync(string? primaryColor, string? backgroundColor, string? textColor, CancellationToken ct = default)
+    // SaveBrandingAsync(colors, nodeId, ct)
+
+    public async Task SaveBrandingAsync(string? primaryColor, string? backgroundColor, string? textColor, int? nodeId, CancellationToken ct = default)
     {
         if (primaryColor is not null) ValidateHexColor(primaryColor, nameof(primaryColor));
         if (backgroundColor is not null) ValidateHexColor(backgroundColor, nameof(backgroundColor));
@@ -55,7 +113,20 @@ public partial class BrandingService : IBrandingService
 
         using var scope = _scopeProvider.CreateScope();
         var database = scope.Database;
-        var results = await database.FetchAsync<uPreviewShareBrandingConfig>("SELECT * FROM uPreviewShare_Branding");
+
+        List<uPreviewShareBrandingConfig> results;
+
+        if (nodeId is not null)
+        {
+            results = await database.FetchAsync<uPreviewShareBrandingConfig>(
+                "SELECT * FROM uPreviewShare_Branding WHERE NodeId = @0", new object[] { nodeId.Value });
+        }
+        else
+        {
+            results = await database.FetchAsync<uPreviewShareBrandingConfig>(
+                "SELECT * FROM uPreviewShare_Branding WHERE NodeId IS NULL");
+        }
+
         var existing = results.FirstOrDefault();
 
         if (existing is not null)
@@ -71,6 +142,7 @@ public partial class BrandingService : IBrandingService
             var newConfig = new uPreviewShareBrandingConfig
             {
                 Id = Guid.NewGuid(),
+                NodeId = nodeId,
                 PrimaryColor = primaryColor,
                 BackgroundColor = backgroundColor,
                 TextColor = textColor,
@@ -81,12 +153,18 @@ public partial class BrandingService : IBrandingService
         }
 
         scope.Complete();
-        _cache.Remove(CacheKey);
-        _logger.LogInformation("Branding colors saved. Primary: {PrimaryColor}, Background: {BackgroundColor}, Text: {TextColor}",
+        if (nodeId is null)
+            InvalidateGlobalAndFallbackCaches();
+        else
+            _cache.Remove(GetCacheKey(nodeId));
+        _logger.LogInformation("Branding colors saved for {Target}. Primary: {PrimaryColor}, Background: {BackgroundColor}, Text: {TextColor}",
+            nodeId is not null ? $"node {nodeId}" : "global",
             primaryColor ?? "(default)", backgroundColor ?? "(default)", textColor ?? "(default)");
     }
 
-    public async Task<string> SaveLogoAsync(Stream fileStream, string fileName, long fileSize, CancellationToken ct = default)
+    // SaveLogoAsync(stream, fileName, fileSize, nodeId, ct)
+
+    public async Task<string> SaveLogoAsync(Stream fileStream, string fileName, long fileSize, int? nodeId, CancellationToken ct = default)
     {
         if (fileSize > MaxLogoSizeBytes)
             throw new ArgumentException($"Logo file size ({fileSize} bytes) exceeds the maximum allowed size of {MaxLogoSizeBytes} bytes (500 KB).");
@@ -112,8 +190,21 @@ public partial class BrandingService : IBrandingService
 
         using var scope = _scopeProvider.CreateScope();
         var database = scope.Database;
-        var results = await database.FetchAsync<uPreviewShareBrandingConfig>("SELECT * FROM uPreviewShare_Branding");
-        var existing = results.FirstOrDefault();
+
+        List<uPreviewShareBrandingConfig> logoResults;
+
+        if (nodeId is not null)
+        {
+            logoResults = await database.FetchAsync<uPreviewShareBrandingConfig>(
+                "SELECT * FROM uPreviewShare_Branding WHERE NodeId = @0", new object[] { nodeId.Value });
+        }
+        else
+        {
+            logoResults = await database.FetchAsync<uPreviewShareBrandingConfig>(
+                "SELECT * FROM uPreviewShare_Branding WHERE NodeId IS NULL");
+        }
+
+        var existing = logoResults.FirstOrDefault();
 
         if (existing is not null)
         {
@@ -127,6 +218,7 @@ public partial class BrandingService : IBrandingService
             var newConfig = new uPreviewShareBrandingConfig
             {
                 Id = Guid.NewGuid(),
+                NodeId = nodeId,
                 LogoPath = relativePath,
                 UpdatedAt = DateTime.UtcNow,
                 UpdatedBy = Guid.Empty
@@ -135,28 +227,72 @@ public partial class BrandingService : IBrandingService
         }
 
         scope.Complete();
-        _cache.Remove(CacheKey);
-        _logger.LogInformation("Logo saved: {LogoPath}", relativePath);
+        if (nodeId is null)
+            InvalidateGlobalAndFallbackCaches();
+        else
+            _cache.Remove(GetCacheKey(nodeId));
+        _logger.LogInformation("Logo saved for {Target}: {LogoPath}",
+            nodeId is not null ? $"node {nodeId}" : "global", relativePath);
         return relativePath;
     }
 
-    public async Task ResetBrandingAsync(CancellationToken ct = default)
+    // ResetBrandingAsync(int? nodeId, ct)
+
+    public async Task ResetBrandingAsync(int? nodeId, CancellationToken ct = default)
     {
         using var scope = _scopeProvider.CreateScope();
         var database = scope.Database;
-        var results = await database.FetchAsync<uPreviewShareBrandingConfig>("SELECT * FROM uPreviewShare_Branding");
-        var existing = results.FirstOrDefault();
+
+        List<uPreviewShareBrandingConfig> resetResults;
+
+        if (nodeId is not null)
+        {
+            resetResults = await database.FetchAsync<uPreviewShareBrandingConfig>(
+                "SELECT * FROM uPreviewShare_Branding WHERE NodeId = @0", new object[] { nodeId.Value });
+        }
+        else
+        {
+            resetResults = await database.FetchAsync<uPreviewShareBrandingConfig>(
+                "SELECT * FROM uPreviewShare_Branding WHERE NodeId IS NULL");
+        }
+
+        var existing = resetResults.FirstOrDefault();
+
         if (existing is not null)
         {
             DeleteLogoFile(existing.LogoPath);
             await database.DeleteAsync(existing);
         }
+
         scope.Complete();
-        _cache.Remove(CacheKey);
-        _logger.LogInformation("Branding reset to defaults");
+        if (nodeId is null)
+            InvalidateGlobalAndFallbackCaches();
+        else
+            _cache.Remove(GetCacheKey(nodeId));
+        _logger.LogInformation("Branding reset for {Target}", nodeId is not null ? $"node {nodeId}" : "global");
     }
 
     #region Private Helpers
+
+    private static string GetCacheKey(int? nodeId)
+        => nodeId is null ? CacheKey : $"{PerPageCacheKeyPrefix}{nodeId}";
+
+    private void InvalidateGlobalAndFallbackCaches()
+    {
+        _cache.Remove(CacheKey);
+        // Also invalidate all per-node cache entries that may hold fallback (global) values
+        lock (_cachedNodeIds)
+        {
+            foreach (var id in _cachedNodeIds)
+                _cache.Remove($"{PerPageCacheKeyPrefix}{id}");
+            _cachedNodeIds.Clear();
+        }
+    }
+
+    private void TrackCachedNodeId(int nodeId)
+    {
+        lock (_cachedNodeIds) { _cachedNodeIds.Add(nodeId); }
+    }
 
     private static BrandingConfigDto MapToDto(uPreviewShareBrandingConfig? config)
     {

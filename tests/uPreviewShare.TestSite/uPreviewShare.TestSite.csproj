@@ -10,7 +10,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Clean" Version="7.0.5" />
     <PackageReference Include="Umbraco.Cms" Version="17.4.1" />
     <PackageReference Include="Umbraco.Cms.DevelopmentMode.Backoffice" Version="17.4.1" />
     <PackageReference Include="Umbraco.Cms.Persistence.Sqlite" Version="17.4.1" />

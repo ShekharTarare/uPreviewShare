@@ -2,6 +2,27 @@
 
 All notable changes to uPreviewShare will be documented in this file.
 
+## [1.2.0] - 2026-07-06
+
+### Added
+
+- Per-page branding overrides — configure distinct colors and logo per content node
+- Override toggle UI with inheritance indicator ("Using global branding defaults")
+- Confirmation dialog when removing per-page overrides
+- Branding API now accepts optional `?nodeKey=<guid>` query parameter for per-page operations
+
+### Changed
+
+- ExpiredLinkCleanupService migrated to Umbraco's `IRecurringBackgroundJob` (fixes scope conflicts)
+- AddCultureColumn migration uses `Create.Column().OnTable()` pattern (Umbraco-recommended)
+- Workspace view tab positioned after Content, before Info (weight 150)
+- Global branding cache invalidation now flushes all per-node fallback entries
+
+### Fixed
+
+- Ambient scope conflicts in background cleanup service on SQLite
+- Error notification on unsaved content nodes (404 handled gracefully)
+
 ## [1.1.0] - 2026-07-05
 
 ### Added

@@ -126,39 +126,69 @@ public class uPreviewShareManagementController : ManagementApiControllerBase
 
     [HttpGet("branding")]
     [ProducesResponseType(typeof(BrandingConfigDto), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetBranding(CancellationToken ct)
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetBranding([FromQuery] Guid? nodeKey, CancellationToken ct)
     {
-        var branding = await _brandingService.GetBrandingAsync(ct);
+        int? nodeId = null;
+        if (nodeKey.HasValue)
+        {
+            var content = _contentService.GetById(nodeKey.Value);
+            if (content == null) return NotFound("Content not found");
+            nodeId = content.Id;
+        }
+        var branding = await _brandingService.GetBrandingAsync(nodeId, ct);
         return Ok(branding);
     }
 
     [HttpPut("branding")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> UpdateBranding([FromBody] UpdateBrandingRequest request, CancellationToken ct)
+    public async Task<IActionResult> UpdateBranding([FromBody] UpdateBrandingRequest request, [FromQuery] Guid? nodeKey, CancellationToken ct)
     {
-        try { await _brandingService.SaveBrandingAsync(request.PrimaryColor, request.BackgroundColor, request.TextColor, ct); return Ok(); }
+        int? nodeId = null;
+        if (nodeKey.HasValue)
+        {
+            var content = _contentService.GetById(nodeKey.Value);
+            if (content == null) return NotFound("Content not found");
+            nodeId = content.Id;
+        }
+        try { await _brandingService.SaveBrandingAsync(request.PrimaryColor, request.BackgroundColor, request.TextColor, nodeId, ct); return Ok(); }
         catch (ArgumentException ex) { return BadRequest(ex.Message); }
     }
 
     [HttpDelete("branding")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> ResetBranding(CancellationToken ct)
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ResetBranding([FromQuery] Guid? nodeKey, CancellationToken ct)
     {
-        await _brandingService.ResetBrandingAsync(ct);
+        int? nodeId = null;
+        if (nodeKey.HasValue)
+        {
+            var content = _contentService.GetById(nodeKey.Value);
+            if (content == null) return NotFound("Content not found");
+            nodeId = content.Id;
+        }
+        await _brandingService.ResetBrandingAsync(nodeId, ct);
         return Ok();
     }
 
     [HttpPost("branding/logo")]
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> UploadLogo(IFormFile file, CancellationToken ct)
+    public async Task<IActionResult> UploadLogo(IFormFile file, [FromQuery] Guid? nodeKey, CancellationToken ct)
     {
+        int? nodeId = null;
+        if (nodeKey.HasValue)
+        {
+            var content = _contentService.GetById(nodeKey.Value);
+            if (content == null) return NotFound("Content not found");
+            nodeId = content.Id;
+        }
         if (file == null || file.Length == 0) return BadRequest("No file provided.");
         try
         {
             using var stream = file.OpenReadStream();
-            var logoPath = await _brandingService.SaveLogoAsync(stream, file.FileName, file.Length, ct);
+            var logoPath = await _brandingService.SaveLogoAsync(stream, file.FileName, file.Length, nodeId, ct);
             return Ok(new { logoPath });
         }
         catch (ArgumentException ex) { return BadRequest(ex.Message); }

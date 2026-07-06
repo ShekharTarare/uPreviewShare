@@ -1,74 +1,83 @@
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Umbraco.Cms.Infrastructure.BackgroundJobs;
 using Umbraco.Cms.Infrastructure.Scoping;
 using uPreviewShare.Models;
 using uPreviewShare.Models.Enums;
 
 namespace uPreviewShare.Services;
 
-public class ExpiredLinkCleanupService : BackgroundService
+/// <summary>
+/// Background job that periodically marks expired preview links and prunes rate-limit entries.
+/// Uses Umbraco's IRecurringBackgroundJob for proper scope and lifecycle management.
+/// </summary>
+public class ExpiredLinkCleanupService : IRecurringBackgroundJob
 {
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IScopeProvider _scopeProvider;
     private readonly IMemoryCache _cache;
     private readonly IRateLimitService _rateLimitService;
     private readonly ILogger<ExpiredLinkCleanupService> _logger;
 
     private const string CacheKeyPrefix = "ups:token:";
-    private readonly TimeSpan _cleanupInterval;
 
-    public ExpiredLinkCleanupService(IServiceProvider serviceProvider, IMemoryCache cache, IRateLimitService rateLimitService, IOptions<uPreviewShareOptions> options, ILogger<ExpiredLinkCleanupService> logger)
+    public TimeSpan Period { get; }
+    public TimeSpan Delay => TimeSpan.FromMinutes(1);
+
+    // No-op event as the period never changes on this job
+    public event EventHandler PeriodChanged { add { } remove { } }
+
+    public ExpiredLinkCleanupService(
+        IScopeProvider scopeProvider,
+        IMemoryCache cache,
+        IRateLimitService rateLimitService,
+        IOptions<uPreviewShareOptions> options,
+        ILogger<ExpiredLinkCleanupService> logger)
     {
-        _serviceProvider = serviceProvider;
+        _scopeProvider = scopeProvider;
         _cache = cache;
         _rateLimitService = rateLimitService;
-        _cleanupInterval = TimeSpan.FromMinutes(options.Value.CleanupIntervalMinutes);
         _logger = logger;
+        Period = TimeSpan.FromMinutes(options.Value.CleanupIntervalMinutes);
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        _logger.LogInformation("ExpiredLinkCleanupService started. Running every {Interval} minutes.", _cleanupInterval.TotalMinutes);
-        using var timer = new PeriodicTimer(_cleanupInterval);
-        while (await timer.WaitForNextTickAsync(stoppingToken))
-        {
-            try { await CleanupExpiredLinksAsync(stoppingToken); }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
-            catch (Exception ex) { _logger.LogError(ex, "Error during expired link cleanup. Will retry on next cycle."); }
-        }
-        _logger.LogInformation("ExpiredLinkCleanupService stopped.");
-    }
-
-    private async Task CleanupExpiredLinksAsync(CancellationToken ct)
+    public async Task RunJobAsync()
     {
         var expiredCount = 0;
+        var expiredTokens = new List<string>();
+
         try
         {
-            using var scope = _serviceProvider.CreateScope();
-            var scopeProvider = scope.ServiceProvider.GetRequiredService<IScopeProvider>();
-            using var dbScope = scopeProvider.CreateScope(autoComplete: true);
-            var database = dbScope.Database;
-            var now = DateTime.UtcNow;
-            var expiredTokens = await database.FetchAsync<string>("SELECT Token FROM uPreviewShare_Links WHERE Status = @0 AND ExpiresAt IS NOT NULL AND ExpiresAt < @1", new object[] { (int)LinkStatus.Active, now });
-
-            if (expiredTokens.Count > 0)
+            using (var dbScope = _scopeProvider.CreateScope(autoComplete: true))
             {
-                expiredCount = await database.ExecuteAsync(
-                    "UPDATE uPreviewShare_Links SET Status = @0 WHERE Status = @1 AND ExpiresAt IS NOT NULL AND ExpiresAt < @2",
-                    new object[] { (int)LinkStatus.Expired, (int)LinkStatus.Active, now });
-                foreach (var token in expiredTokens)
-                    _cache.Remove($"{CacheKeyPrefix}{token}");
+                var database = dbScope.Database;
+                var now = DateTime.UtcNow;
+
+                var tokens = await database.FetchAsync<string>(
+                    "SELECT Token FROM uPreviewShare_Links WHERE Status = @0 AND ExpiresAt IS NOT NULL AND ExpiresAt < @1",
+                    new object[] { (int)LinkStatus.Active, now });
+
+                if (tokens is { Count: > 0 })
+                {
+                    expiredTokens.AddRange(tokens);
+                    expiredCount = await database.ExecuteAsync(
+                        "UPDATE uPreviewShare_Links SET Status = @0 WHERE Status = @1 AND ExpiresAt IS NOT NULL AND ExpiresAt < @2",
+                        new object[] { (int)LinkStatus.Expired, (int)LinkStatus.Active, now });
+                }
             }
         }
-        catch (Exception ex) { _logger.LogError(ex, "Failed to cleanup expired links from database."); }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to cleanup expired links from database.");
+            return;
+        }
 
-        var prunedBefore = 0;
-        try { _rateLimitService.PruneExpiredEntries(); prunedBefore = 1; }
+        foreach (var token in expiredTokens)
+            _cache.Remove($"{CacheKeyPrefix}{token}");
+
+        try { _rateLimitService.PruneExpiredEntries(); }
         catch (Exception ex) { _logger.LogError(ex, "Failed to prune stale rate-limit entries."); }
 
-        if (expiredCount > 0 || prunedBefore > 0)
-            _logger.LogInformation("Cleanup completed: {ExpiredCount} links marked as expired, rate-limit entries pruned.", expiredCount);
+        _logger.LogInformation("Cleanup completed: {ExpiredCount} links marked as expired, rate-limit entries pruned.", expiredCount);
     }
 }
