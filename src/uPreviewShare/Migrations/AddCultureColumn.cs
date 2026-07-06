@@ -18,8 +18,8 @@ public class AddCultureColumn : AsyncMigrationBase
             return Task.CompletedTask;
         }
 
-        Alter.Table("uPreviewShare_Links")
-            .AddColumn("Culture")
+        Create.Column("Culture")
+            .OnTable("uPreviewShare_Links")
             .AsString(16)
             .Nullable()
             .Do();

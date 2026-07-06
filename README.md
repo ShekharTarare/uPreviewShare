@@ -23,6 +23,7 @@ Securely share unpublished draft content with external stakeholders — clients,
 | Audit Logging                 | Track all access events, failed PINs, revocations with IP and user-agent       |
 | Link-Specific Audit Filtering | Filter audit logs by individual link, including deleted links                  |
 | Configurable Branding         | Custom logo and colors on the PIN page                                         |
+| Per-Page Branding Overrides   | Override global branding for specific content nodes                            |
 | Auto-Revocation               | Links revoked when content is deleted                                          |
 | Soft Delete                   | Deleted links preserve audit trail for compliance                              |
 | Draft/Published Badge         | Floating bar shows reviewers the content status                                |
@@ -47,13 +48,13 @@ Securely share unpublished draft content with external stakeholders — clients,
 
 | uPreviewShare Version | Umbraco Version | Branch    |
 | --------------------- | --------------- | --------- |
-| 2.1.x                 | 18              | `main`    |
+| 2.2.x                 | 18              | `main`    |
 | 1.1.x                 | 17              | `v17/dev` |
 
 ### Umbraco 18
 
 ```bash
-dotnet add package uPreviewShare --version 2.1.0
+dotnet add package uPreviewShare --version 2.2.0
 ```
 
 ### Umbraco 17
@@ -110,6 +111,17 @@ Customize the PIN page appearance from the **Branding** tab in the workspace:
 - **Background Color** — PIN page background
 - **Text Color** — Text on primary-colored elements (auto-calculated if not set)
 - **Logo** — Upload a PNG or SVG (max 500KB)
+
+#### Per-Page Branding Overrides
+
+By default, all preview/PIN pages use the global branding. To apply different branding for a specific content node:
+
+1. Navigate to the content node's **uPreviewShare** tab → **Branding**
+2. Enable the **"Override branding for this page"** toggle
+3. Set custom colors and/or logo for that page
+4. Click **Save**
+
+When the toggle is off, the page uses global branding defaults. Turning off the toggle deletes the per-page override (with confirmation).
 
 ## How It Works
 

@@ -34,4 +34,14 @@ public class BrandingConfigDto
     /// Whether custom branding is configured (true) or defaults are in use (false).
     /// </summary>
     public bool IsCustom { get; set; }
+
+    /// <summary>
+    /// The content node ID this branding belongs to, or null if this is the global branding configuration.
+    /// </summary>
+    public int? NodeId { get; set; }
+
+    /// <summary>
+    /// Whether this branding configuration is a per-page override (true) or the global default (false).
+    /// </summary>
+    public bool IsOverride { get; set; }
 }

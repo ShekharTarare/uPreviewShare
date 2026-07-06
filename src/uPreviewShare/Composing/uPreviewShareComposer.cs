@@ -29,7 +29,7 @@ public class uPreviewShareComposer : IComposer
         builder.Services.AddSingleton<ITokenLinkService, TokenLinkService>();
         builder.Services.AddScoped<uPreviewShareExceptionFilter>();
         builder.Services.AddScoped<uPreviewSharePreviewBarFilter>();
-        builder.Services.AddHostedService<ExpiredLinkCleanupService>();
+        builder.Services.AddRecurringBackgroundJob<ExpiredLinkCleanupService>();
         builder.AddNotificationAsyncHandler<ContentDeletedNotification, uPreviewShareContentNotificationHandler>();
     }
 }

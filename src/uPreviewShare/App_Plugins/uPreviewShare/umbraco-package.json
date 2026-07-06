@@ -1,13 +1,13 @@
 {
   "name": "uPreviewShare",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "extensions": [
     {
       "type": "workspaceView",
       "name": "uPreviewShare Workspace View",
       "alias": "uPreviewShare.WorkspaceView",
       "element": "/App_Plugins/uPreviewShare/upreviewshare-workspace-view.js",
-      "weight": 200,
+      "weight": 150,
       "meta": {
         "label": "uPreviewShare",
         "pathname": "upreviewshare",
